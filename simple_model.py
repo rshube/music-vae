@@ -9,6 +9,7 @@ import os
 import torch
 import torch.nn as nn
 import librosa
+import soundfile as sf
 import matplotlib.pyplot as plt
 
 device = torch.device("cuda:0")
@@ -19,18 +20,14 @@ class SimpleAutoencoder(nn.Module):
         super(SimpleAutoencoder, self).__init__()
         self.encode1 = nn.Linear(220500, 300)
         self.encode2 = nn.Linear(300,50)
-        self.encode3 = nn.Linear(50,25)
-        self.decode1 = nn.Linear(25,50)
         self.decode2 = nn.Linear(50,300)
         self.decode3 = nn.Linear(300, 220500)
         
-        self.activation_func = nn.ReLU()
+        self.activation_func = nn.Tanh()
 
     def forward(self, stimulus):
         x = self.activation_func(self.encode1(stimulus))
         x = self.activation_func(self.encode2(x))
-        x = self.activation_func(self.encode3(x))
-        x = self.activation_func(self.decode1(x))
         x = self.activation_func(self.decode2(x))
         x = self.decode3(x)
         return x
@@ -80,12 +77,15 @@ def OptimizeModel(net, dataset, label, epochs):
             optimizer.step()
             
             loss_results.append(loss.item())
-    
+        print('Epoch')
     plt.plot(loss_results)
     print('Finished Training')
     
     
 if __name__ == "__main__":
     net = SimpleAutoencoder().to(device)
-    OptimizeModel(net, 'clips', 444, 10)
+    OptimizeModel(net, 'clips', 444, 50)
+    data, sr = librosa.load('Q:\Documents\TDS SuperUROP\\music-vae\\clips\\lofi-track-1-clip-2.mp3')
+    output = net(torch.tensor(data).to(device)).cpu().detach().numpy()
+    sf.write('output_clip_2.wav',output,sr)
     
