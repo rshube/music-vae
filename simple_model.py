@@ -15,27 +15,65 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda:0")
 
 
-class LinearAutoencoder(nn.Module):
+class SimpleLinearAutoencoder(nn.Module):
     def __init__(self):
-        super(LinearAutoencoder, self).__init__()
-        self.encode1 = nn.Linear(220500, 300)
-        self.encode2 = nn.Linear(300,50)
-        self.decode2 = nn.Linear(50,300)
-        self.decode3 = nn.Linear(300, 220500)
+        super(SimpleLinearAutoencoder, self).__init__()
+        self.encode1 = nn.Linear(220500, 50)
+        self.decode1 = nn.Linear(50, 220500)
         
-        self.activation_func = nn.Tanh()
+        self.activation_func = nn.ReLU()
+
+    def forward(self, stimulus):
+        x = self.activation_func(self.encode1(stimulus))
+        x = self.decode1(x)
+        return x
+
+
+class ComplexLinearAutoencoder(nn.Module):
+    def __init__(self):
+        super(ComplexLinearAutoencoder, self).__init__()
+        self.encode1 = nn.Linear(220500, 250)
+        self.encode2 = nn.Linear(250, 100)
+        self.encode3 = nn.Linear(100, 50)
+        self.decode1 = nn.Linear(50, 100)
+        self.decode2 = nn.Linear(100, 250)
+        self.decode3 = nn.Linear(250, 220500)
+        
+        self.activation_func = nn.ReLU()
 
     def forward(self, stimulus):
         x = self.activation_func(self.encode1(stimulus))
         x = self.activation_func(self.encode2(x))
+        x = self.activation_func(self.encode3(x))
+        x = self.activation_func(self.decode1(x))
         x = self.activation_func(self.decode2(x))
         x = self.decode3(x)
         return x
 
 
-class ConvolutionalAutoencoder(nn.Module):
+class SimpleConvolutionalEncoder(nn.Module):
     def __init__(self):
-        super(ConvolutionalAutoencoder, self).__init__()
+        super(SimpleConvolutionalEncoder, self).__init__()
+        self.encode1 = nn.Conv1d(1, 4, 501, padding=255)
+        self.decode1 = nn.ConvTranspose1d(4, 1, 501, padding=255)
+        
+        self.pool = nn.MaxPool1d(10, stride=10, return_indices=True)
+        self.unpool = nn.MaxUnpool1d(10, stride=10)
+        self.activation_func = nn.ReLU()
+
+    def forward(self, x):
+        x = torch.unsqueeze(x, 1)
+        x = self.activation_func(self.encode1(x))
+        y1 = x.size()
+        x, p1 = self.pool(x)
+        x = self.unpool(x, p1, output_size=y1)
+        x = self.decode1(x)
+        return torch.squeeze(x)
+
+
+class ComplexConvolutionalEncoder(nn.Module):
+    def __init__(self):
+        super(ComplexConvolutionalEncoder, self).__init__()
         self.encode1 = nn.Conv1d(1, 4, 501, padding=255)
         self.encode2 = nn.Conv1d(4, 8, 251, padding=125)
         self.encode3 = nn.Conv1d(8, 16, 125, padding=62)
@@ -45,20 +83,21 @@ class ConvolutionalAutoencoder(nn.Module):
         
         self.pool = nn.MaxPool1d(10, stride=10, return_indices=True)
         self.unpool = nn.MaxUnpool1d(10, stride=10)
-        self.activation_func = nn.Tanh()
+        self.activation_func = nn.ReLU()
 
     def forward(self, x):
         x = torch.unsqueeze(x, 1)
         x = self.activation_func(self.encode1(x))
-        y = x.size()
+        y1 = x.size()
         x, p1 = self.pool(x)
         x = self.activation_func(self.encode2(x))
+        y2 = x.size()
         x, p2 = self.pool(x)
         x = self.activation_func(self.encode3(x))
         x = self.activation_func(self.decode1(x))
         x = self.unpool(x, p2)
         x = self.activation_func(self.decode2(x))
-        x = self.unpool(x, p1, output_size=y)
+        x = self.unpool(x, p1, output_size=y1)
         x = self.decode3(x)
         return torch.squeeze(x)
 
@@ -78,17 +117,34 @@ class Dataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         # Select sample
         ID = self.list_IDs[index]
-        dirr = 'Q:\Documents\TDS SuperUROP\\music-vae\\'+self.file_name + os.sep
+        dirr = 'Q:/Documents/TDS SuperUROP/music-vae/wav-clips' + os.sep + self.file_name
 
         # Load data and get label
-        data, sr = librosa.load(dirr+'\lofi-track-1-clip-'+str(ID)+'.mp3')
+        data, sr = librosa.load(dirr+str(ID)+'.wav')
         return data
     
     
-def OptimizeModel(net, dataset, label, epochs):    
+def TestModel(net, dataset, label, b_size):
+    trainfunc = Dataset(dataset,range(1,label))
+    trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=b_size, shuffle=False, num_workers=0)
+    net.eval()
+    lossfunc = nn.MSELoss()
+    
+    losses = []
+    for i, data in enumerate(trainloader, 0):
+        inputs = data.to(device)
+        outputs = net(inputs)
+        loss = lossfunc(outputs, inputs)
+        losses.append(loss.item())
+    
+    print(dataset)
+    return sum(losses)/len(losses)
+
+
+def OptimizeModel(net, dataset, label, epochs, b_size):    
     # Datasets
     trainfunc = Dataset(dataset,range(1,label))
-    trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=30, shuffle=True, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=b_size, shuffle=True, num_workers=0)
     
     # Optimize and Loss
     optimizer = torch.optim.Adam(net.parameters())
@@ -106,23 +162,63 @@ def OptimizeModel(net, dataset, label, epochs):
             loss.backward()
             optimizer.step()
             
-            loss_results.append(loss.item())
+        loss_results.append(TestModel(net, dataset, label, b_size))
+        net.train()
         print('Epoch')
-    plt.plot(loss_results)
     print('Finished Training')
+    
+    return loss_results
+
+
+def TestAllModel(net):
+    net.eval()
+    
+    lofi1 = TestModel(net, 'lofi-track-1-clip-', 719, 10)
+    lofi2 = TestModel(net, 'lofi-track-2-clip-', 444, 10)
+    lec = TestModel(net, 'lecture-clip-', 621, 10)
+    jazz = TestModel(net, 'jazz-clip-', 719, 10)
+    city = TestModel(net, 'city-sounds-clip-', 719, 10)
+    white = TestModel(net, 'white-noise-clip-', 719, 10)
+    
+    return ['lofi1','lofi2','lec','jazz','city','white'], [lofi1,lofi2,lec,jazz,city,white]
+
+
+def runSimpleAutoEncode(net, model):
+    losses = OptimizeModel(net, 'lofi-track-1-clip-', 719, 10, 30)
+    fig, ax = plt.subplots()
+    ax.plot(range(1, len(losses)+1),losses)
+    ax.set_title('Loss as a function of epoch for '+model)
+    ax.set_xlabel('Training Epoch')
+    ax.set_ylabel('MSE Loss')
+    plt.savefig('Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/training_plot.svg')
+    plt.show()
+    labels, results = TestAllModel(net)
+    fig, ax = plt.subplots()
+    ax.bar(range(len(results)),results)
+    ax.set_title('Loss across data sets for '+model)
+    ax.set_xticks(range(len(results)))
+    ax.set_xticklabels(labels)
+    ax.set_xlabel('Data Set')
+    ax.set_ylabel('MSE Loss')
+    plt.savefig('Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/evaluation_plot.svg')
+    plt.show()
+    torch.save(net.state_dict(), 'Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/model.pt')
     
     
 if __name__ == "__main__":
-    # net = LinearAutoencoder().to(device)
-    # OptimizeModel(net, 'clips', 444, 50)
-    # data, sr = librosa.load('Q:\Documents\TDS SuperUROP\\music-vae\\clips\\lofi-track-1-clip-2.mp3')
-    # output = net(torch.tensor(data).to(device)).cpu().detach().numpy()
-    # sf.write('output_clip_2.wav',output,sr)
-    # torch.save(net.state_dict(), 'linear_autoencoder.pt')
     
-    net = ConvolutionalAutoencoder().to(device)
-    OptimizeModel(net, 'clips', 444, 50)
-    data, sr = librosa.load('Q:\Documents\TDS SuperUROP\\music-vae\\clips\\lofi-track-1-clip-3.mp3')
-    output = net(torch.unsqueeze(torch.tensor(data).to(device),dim=0)).cpu().detach().numpy()
-    sf.write('output_clip_3.wav',output,sr)
-    torch.save(net.state_dict(), 'convolutional_autoencoder.pt')
+    net = SimpleLinearAutoencoder().to(device)
+    runSimpleAutoEncode(net, 'simpleAutoEncode')
+    
+    net = ComplexLinearAutoencoder().to(device)
+    runSimpleAutoEncode(net, 'complexAutoEncode')
+    
+    net = SimpleConvolutionalEncoder().to(device)
+    runSimpleAutoEncode(net, 'simpleConvEncode')
+    
+    net = ComplexConvolutionalEncoder().to(device)
+    runSimpleAutoEncode(net, 'complexConvEncode')
+    
+    
+    
+    
