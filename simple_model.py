@@ -164,8 +164,7 @@ class ImageConvolutionalEncoder(nn.Module):
         x = self.decode1i(x)
         imag = torch.squeeze(x)
         
-        output = real + 1j * imag
-        return output
+        return real, imag
 
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
@@ -245,9 +244,10 @@ def TestFourierModel(net, dataset, label):
     for i, data in enumerate(trainloader, 0):
         comp_input = librosa.core.stft(np.array(data[0]))
         real, imag = torch.Tensor(np.real(comp_input)).to(device), torch.Tensor(np.imag(comp_input)).to(device)
-        outputs = net(real, imag)
-        loss = lossfunc(outputs, real+1j*imag)
-        losses.append(loss.item())
+        realOUT, imagOUT = net(real, imag)
+        loss_real = lossfunc(realOUT, real)
+        loss_imag = lossfunc(imagOUT, imag)
+        losses.append(loss_real.item() + loss_imag.item())
     
     print(dataset)
     return sum(losses)/len(losses)
@@ -269,10 +269,12 @@ def OptimizeFourierModel(net, dataset, label, epochs):
         for i, data in enumerate(trainloader, 0):
             optimizer.zero_grad()
             comp_input = librosa.core.stft(np.array(data[0]))
-            real, imag = torch.Tensor(np.real(comp_input)).to(device), torch.Tensor(np.imag(comp_input)).to(device)
-            outputs = net(real, imag)
-            loss = lossfunc(outputs, comp_input)
-            loss.backward()
+            real, imag = torch.Tensor(np.real(comp_input)), torch.Tensor(np.imag(comp_input))
+            realOUT, imagOUT = net(real, imag)
+            loss_real = lossfunc(realOUT, real)
+            loss_imag = lossfunc(imagOUT, imag)
+            loss_real.backward()
+            loss_imag.backward()
             optimizer.step()
             
         loss_results.append(TestFourierModel(net, dataset, label))
@@ -367,7 +369,7 @@ if __name__ == "__main__":
     # net = ComplexConvolutionalEncoder().to(device)
     # runSimpleAutoEncode(net, 'complexConvEncode')
     
-    net = ImageConvolutionalEncoder().to(device)
+    net = ImageConvolutionalEncoder()
     runComplexAutoEncode(net, 'imagConvEncode')
     
     print('Done')
