@@ -269,7 +269,7 @@ def OptimizeFourierModel(net, dataset, label, epochs):
         for i, data in enumerate(trainloader, 0):
             optimizer.zero_grad()
             comp_input = librosa.core.stft(np.array(data[0]))
-            real, imag = torch.Tensor(np.real(comp_input)), torch.Tensor(np.imag(comp_input))
+            real, imag = torch.Tensor(np.real(comp_input)).to(device), torch.Tensor(np.imag(comp_input)).to(device)
             realOUT, imagOUT = net(real, imag)
             loss_real = lossfunc(realOUT, real)
             loss_imag = lossfunc(imagOUT, imag)
@@ -369,7 +369,7 @@ if __name__ == "__main__":
     # net = ComplexConvolutionalEncoder().to(device)
     # runSimpleAutoEncode(net, 'complexConvEncode')
     
-    net = ImageConvolutionalEncoder()
+    net = ImageConvolutionalEncoder().to(device)
     runComplexAutoEncode(net, 'imagConvEncode')
     
     print('Done')
