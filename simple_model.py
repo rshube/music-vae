@@ -50,7 +50,7 @@ class SimpleLinearVariationalAutoencoder(nn.Module):
         logstd = torch.clamp(logstd, -20, 2)
         dist = torch.distributions.MultivariateNormal(
             mu,
-            torch.exp(logstd).unsqueeze(2) * torch.eye(50).expand(mu.shape[0], 50, 50)
+            torch.exp(logstd).unsqueeze(2) * torch.eye(50, device=device).expand(mu.shape[0], 50, 50)
         )
 
         # rsample performs reparam trick to keep deterministic and enable backprop
@@ -208,11 +208,10 @@ class Dataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         # Select sample
         ID = self.list_IDs[index]
-        # dirr = 'Q:/Documents/TDS SuperUROP/music-vae/wav-clips' + os.sep + self.file_name
         dirr = os.path.join(os.getcwd(), f'wav-clips/{self.file_name}')
 
         # Load data and get label
-        data, sr = librosa.load(dirr+str(ID)+'.wav')
+        data, sr = librosa.load(f'{dirr}{ID}.wav')
         return data
     
     
@@ -235,7 +234,7 @@ def TestModel(net, dataset, label, b_size):
 
 def OptimizeModel(net, dataset, label, epochs, b_size):    
     # Datasets
-    trainfunc = Dataset(dataset,range(1,label))
+    trainfunc = Dataset(dataset,range(1, label + 1))
     trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=b_size, shuffle=True, num_workers=0)
     
     # Optimize and Loss
@@ -256,7 +255,7 @@ def OptimizeModel(net, dataset, label, epochs, b_size):
             
         loss_results.append(TestModel(net, dataset, label, b_size))
         net.train()
-        print('Epoch')
+        print(f'Epoch {epoch}\tEvaluation Loss: {loss_results[-1]}')
     print('Finished Training')
     
     return loss_results
@@ -316,18 +315,18 @@ def OptimizeFourierModel(net, dataset, label, epochs):
 def TestAllModel(net):
     net.eval()
     
-    lofi1 = TestModel(net, 'lofi-track-1-clip-', 719, 10)
-    lofi2 = TestModel(net, 'lofi-track-2-clip-', 444, 10)
-    lec = TestModel(net, 'lecture-clip-', 621, 10)
-    jazz = TestModel(net, 'jazz-clip-', 719, 10)
-    city = TestModel(net, 'city-sounds-clip-', 719, 10)
-    white = TestModel(net, 'white-noise-clip-', 719, 10)
+    lofi1 = TestModel(net, 'lofi-track-1-clip-', 720, 10)
+    lofi2 = TestModel(net, 'lofi-track-2-clip-', 445, 10)
+    lec = TestModel(net, 'lecture-clip-', 622, 10)
+    jazz = TestModel(net, 'jazz-clip-', 720, 10)
+    city = TestModel(net, 'city-sounds-clip-', 720, 10)
+    white = TestModel(net, 'white-noise-clip-', 720, 10)
     
     return ['lofi1','lofi2','lec','jazz','city','white'], [lofi1,lofi2,lec,jazz,city,white]
 
 
 def runSimpleAutoEncode(net, model):
-    losses = OptimizeModel(net, 'lofi-track-1-clip-', 719, 10, 30)
+    losses = OptimizeModel(net, 'lofi-track-1-clip-', 720, 10, 30)
     fig, ax = plt.subplots()
     ax.plot(range(1, len(losses)+1),losses)
     ax.set_title('Loss as a function of epoch for '+model)
