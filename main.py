@@ -1,4 +1,4 @@
-from args import ArgsWrapper
+from utils import ArgsWrapper
 
 def get_model(model):
     model = args.model

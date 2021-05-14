@@ -234,7 +234,7 @@ def TestModel(net, dataset, label, b_size):
 
 def OptimizeModel(net, dataset, label, epochs, b_size):    
     # Datasets
-    trainfunc = Dataset(dataset,range(1, label + 1))
+    trainfunc = Dataset(dataset,range(1, label))
     trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=b_size, shuffle=True, num_workers=0)
     
     # Optimize and Loss
