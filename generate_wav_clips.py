@@ -19,7 +19,7 @@ def convert_to_wav():
     path_start = os.getcwd()
     if not os.path.isdir(os.path.join(path_start, 'source-wavs')):
         os.mkdir(os.path.join(path_start, 'source-wavs'))
-    template = 'ffmpeg -ss {0} -to {1} -i "{2}" -vn "source-wavs/{3}.wav"'
+    template = 'ffmpeg -ss {0} -i "{1}" -vn -to {2} "source-wavs/{3}.wav"'
     audios = os.listdir(os.path.join(path_start, "source-audio"))
     for audio in audios:
         audio_source = "source-audio/{0}".format(audio)
@@ -28,7 +28,7 @@ def convert_to_wav():
         if audio == 'lecture.m4a':
             print("done\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
             start = 25
-        cmd = template.format(start, to, audio_source, audio.split('.')[0])
+        cmd = template.format(start, audio_source, to, audio.split('.')[0])
         os.system(cmd)
 
 def split_tracks(window_size=10000, slide_length=5000):
