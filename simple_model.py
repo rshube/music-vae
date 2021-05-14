@@ -316,8 +316,8 @@ def TestAllModel(net):
     net.eval()
     
     lofi1 = TestModel(net, 'lofi-track-1-clip-', 720, 10)
-    lofi2 = TestModel(net, 'lofi-track-2-clip-', 445, 10)
-    lec = TestModel(net, 'lecture-clip-', 622, 10)
+    lofi2 = TestModel(net, 'lofi-track-2-clip-', 444, 10)
+    lec = TestModel(net, 'lecture-clip-', 621, 10)
     jazz = TestModel(net, 'jazz-clip-', 720, 10)
     city = TestModel(net, 'city-sounds-clip-', 720, 10)
     white = TestModel(net, 'white-noise-clip-', 720, 10)
