@@ -4,16 +4,14 @@ import os
 from pydub import AudioSegment
 
 
-def save_youtube_audio(link_dict, fake_link):
+def save_youtube_audio(link_dict):
     path_start = os.getcwd()
     if not os.path.isdir(os.path.join(path_start, 'source-audio')):
         os.mkdir(os.path.join(path_start, 'source-audio'))
-    template = "C:/bin/youtube-dl.exe -f bestaudio {0}"
+    template = "youtube-dl -o '{}/source-audio/{}.%(ext)s' {} -f bestaudio"
 
-    for video in link_dict:
-        link = link_dict[video]
-        #link = fake_link
-        cmd = template.format(link)
+    for video, link in link_dict.items():
+        cmd = template.format(path_start, video, link)
         print(cmd)
         os.system(cmd)
 
@@ -59,9 +57,7 @@ if __name__=='__main__':
                 'jazz': 'https://bit.ly/3bcQyoy',
                 'lecture': 'https://bit.ly/3h4t5to'}
 
-    fake_link = 'https://bit.ly/3uv9TJ1'
-
-    save_youtube_audio(link_dict, fake_link)
+    save_youtube_audio(link_dict)
     convert_to_wav()
     split_tracks()
     

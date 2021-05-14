@@ -16,7 +16,7 @@ import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
 
-device = torch.device("cuda:0")
+device = torch.device("cuda:0") if torch.cuda.is_available() else 'cpu'
 
 
 class SimpleLinearAutoencoder(nn.Module):
@@ -29,6 +29,33 @@ class SimpleLinearAutoencoder(nn.Module):
 
     def forward(self, stimulus):
         x = self.activation_func(self.encode1(stimulus))
+        x = self.decode1(x)
+        return x
+
+
+class SimpleLinearVariationalAutoencoder(nn.Module):
+    def __init__(self):
+        super(SimpleLinearVariationalAutoencoder, self).__init__()
+        self.encode_mu = nn.Linear(220500, 50)
+        self.encode_logstd = nn.Linear(220500, 50)
+
+        self.decode1 = nn.Linear(50, 220500)
+        
+        self.activation_func = nn.ReLU()
+
+
+    def forward(self, stimulus):
+        mu = self.encode_mu(stimulus)
+        logstd = self.encode_logstd(stimulus)
+        logstd = torch.clamp(logstd, -20, 2)
+        dist = torch.distributions.MultivariateNormal(
+            mu,
+            torch.exp(logstd).unsqueeze(2) * torch.eye(50).expand(mu.shape[0], 50, 50)
+        )
+
+        # rsample performs reparam trick to keep deterministic and enable backprop
+        x = torch.tanh(dist.rsample())
+
         x = self.decode1(x)
         return x
 
@@ -181,7 +208,8 @@ class Dataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         # Select sample
         ID = self.list_IDs[index]
-        dirr = 'Q:/Documents/TDS SuperUROP/music-vae/wav-clips' + os.sep + self.file_name
+        # dirr = 'Q:/Documents/TDS SuperUROP/music-vae/wav-clips' + os.sep + self.file_name
+        dirr = os.path.join(os.getcwd(), f'wav-clips/{self.file_name}')
 
         # Load data and get label
         data, sr = librosa.load(dirr+str(ID)+'.wav')
@@ -305,7 +333,11 @@ def runSimpleAutoEncode(net, model):
     ax.set_title('Loss as a function of epoch for '+model)
     ax.set_xlabel('Training Epoch')
     ax.set_ylabel('MSE Loss')
-    plt.savefig('Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/training_plot.svg')
+    if not os.path.isdir(os.path.join(os.getcwd(), 'models')):
+        os.mkdir(os.path.join(os.getcwd(), 'models'))
+    if not os.path.isdir(os.path.join(os.getcwd(), 'models', model)):
+        os.mkdir(os.path.join(os.getcwd(), 'models', model))
+    plt.savefig(os.path.join(os.getcwd(), f'models/{model}/training_plot.svg'))
     plt.show()
     labels, results = TestAllModel(net)
     fig, ax = plt.subplots()
@@ -315,9 +347,9 @@ def runSimpleAutoEncode(net, model):
     ax.set_xticklabels(labels)
     ax.set_xlabel('Data Set')
     ax.set_ylabel('MSE Loss')
-    plt.savefig('Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/evaluation_plot.svg')
+    plt.savefig(os.path.join(os.getcwd(), f'models/{model}/evaluation_plot.svg'))
     plt.show()
-    torch.save(net.state_dict(), 'Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/model.pt')
+    torch.save(net.state_dict(), os.path.join(os.getcwd(), f'models/{model}/model.pt'))
     
     
 def TestComplexAllModel(net):
@@ -340,7 +372,11 @@ def runComplexAutoEncode(net, model):
     ax.set_title('Loss as a function of epoch for '+model)
     ax.set_xlabel('Training Epoch')
     ax.set_ylabel('MSE Loss')
-    plt.savefig('Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/training_plot.svg')
+    if not os.path.isdir(os.path.join(os.getcwd(), 'models')):
+        os.mkdir(os.path.join(os.getcwd(), 'models'))
+    if not os.path.isdir(os.path.join(os.getcwd(), 'models', model)):
+        os.mkdir(os.path.join(os.getcwd(), 'models', model))
+    plt.savefig(os.path.join(os.getcwd(), f'models/{model}/training_plot.svg'))
     plt.show()
     labels, results = TestComplexAllModel(net)
     fig, ax = plt.subplots()
@@ -350,15 +386,18 @@ def runComplexAutoEncode(net, model):
     ax.set_xticklabels(labels)
     ax.set_xlabel('Data Set')
     ax.set_ylabel('MSE Loss')
-    plt.savefig('Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/evaluation_plot.svg')
+    plt.savefig(os.path.join(os.getcwd(), f'models/{model}/evaluation_plot.svg'))
     plt.show()
-    torch.save(net.state_dict(), 'Q:/Documents/TDS SuperUROP/music-vae/models/'+model+'/model.pt')
+    torch.save(net.state_dict(), os.path.join(os.getcwd(), f'models/{model}/model.pt'))
     
     
 if __name__ == "__main__":
     
     # net = SimpleLinearAutoencoder().to(device)
     # runSimpleAutoEncode(net, 'simpleAutoEncode')
+
+    net = SimpleLinearVariationalAutoencoder().to(device)
+    runSimpleAutoEncode(net, 'simpleVarAutoEncode')
     
     # net = ComplexLinearAutoencoder().to(device)
     # runSimpleAutoEncode(net, 'complexAutoEncode')
@@ -369,8 +408,8 @@ if __name__ == "__main__":
     # net = ComplexConvolutionalEncoder().to(device)
     # runSimpleAutoEncode(net, 'complexConvEncode')
     
-    net = ImageConvolutionalEncoder().to(device)
-    runComplexAutoEncode(net, 'imagConvEncode')
+    # net = ImageConvolutionalEncoder().to(device)
+    # runComplexAutoEncode(net, 'imagConvEncode')
     
     print('Done')
     
