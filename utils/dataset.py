@@ -20,7 +20,7 @@ class Dataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         # Select sample
         ID = self.list_IDs[index]
-        dirr = os.path.join(DATA_PATH, f'/wav-clips/{self.file_name}')
+        dirr = os.path.join(DATA_PATH, f'wav-clips/{self.file_name}')
 
         # Load data and get label
         data, sr = librosa.load(f'{dirr}{ID}.wav')

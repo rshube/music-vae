@@ -87,7 +87,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    print(DATA_PATH)
     args = ArgsWrapper()
     args.parse_args()
     args.print_args()
