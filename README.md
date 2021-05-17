@@ -20,6 +20,7 @@ In the top level of the repo, fetch the data sources and generate clips of `.wav
 ```bash
 python3 generate_wav_clips.py
 ```
+The data files are saved in `music-vae/data` by default. The data save location can be changed by changed the `DATA_PATH` variable in `music-vae/utils/consts.py`
 
 
 ## Train a model
@@ -36,4 +37,5 @@ The arguments you can add:
 |--lr | The learning rate | 1e-03|
 |--batch_size| The batch_size| 32|
 
+By default, the model is trained on 10s clips of Lo-Fi music. Running this will save the a plot of the evaluation loss over each epoch of training, the evaluation loss against different types of data sets, and the model weights. The default save location is `music-vae/results/{model type}/{date-time}/`. This can be changed by changing the `save_dir` variable in the `main` function of `main.py`.
 
