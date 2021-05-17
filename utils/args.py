@@ -14,18 +14,18 @@ class ArgsWrapper:
             '--model',
             type=str,
             choices=[
-                'SimpleAE',
-                'SimpleVAE',
-                'ComplexAE',
-                'SimpleConvAE',
-                'ComplexConvAE',
-                'ImageConvAE'
+                'SimpleAutoEncoder',
+                'SimpleVarAutoEncoder',
+                'AutoEncoder',
+                'SimpleConvAutoEncoder',
+                'ConvAutoEncoder',
+                'ImageConvAutoEncoder'
             ],
-            default='SimpleAE',
+            default='SimpleAutoEncoder',
             help='the auto encoder model to train'
         )
         self.parser.add_argument(
-            '--train_epochs',
+            '--num_epochs',
             type=int,
             default=10,
             help='the number of epochs to complete during training'
