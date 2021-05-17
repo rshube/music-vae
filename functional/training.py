@@ -22,14 +22,13 @@ def TrainModel(args, model, num_clips, fourier=False):
         for i, data in enumerate(trainloader):
             optimizer.zero_grad()
             if not fourier:
-                inputs = data.to(model.device)
+                inputs = data.to(args.device)
                 outputs = model(inputs)
                 loss = lossfunc(outputs, inputs)
                 loss.backward()
             else:
                 comp_input = torch.stft(data, n_fft=2048, window=torch.hann_window(2048), return_complex=True)
-                real, imag = comp_input.real.to(args.device), comp_input.imag.to(args.device)
-                real, imag = real.unsqueeze(0), imag.unsqueeze(0)
+                real, imag = comp_input.real.unsqueeze(0).to(args.device), comp_input.imag.unsqueeze(0).to(args.device)
                 realOUT, imagOUT = model(real, imag)
                 loss_real = lossfunc(realOUT, real)
                 loss_imag = lossfunc(imagOUT, imag)
