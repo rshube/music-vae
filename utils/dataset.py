@@ -1,7 +1,8 @@
 import os
-from utils.consts import DATA_PATH
 import torch
 import librosa
+
+from .consts import DATA_PATH
 
 
 class Dataset(torch.utils.data.Dataset):

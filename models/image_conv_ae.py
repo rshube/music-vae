@@ -30,8 +30,7 @@ class ImageConvAutoEncoder(nn.Module):
         self.activation_func = nn.ReLU()
 
     def forward(self, real, imag):
-        x = torch.unsqueeze(torch.unsqueeze(real, 0), 0)
-        x = self.activation_func(self.encode1(x))
+        x = self.activation_func(self.encode1(real))
         x = self.activation_func(self.encode2(x))
         x = self.activation_func(self.encode3(x))
         x = self.activation_func(self.encode4(x))
@@ -45,8 +44,7 @@ class ImageConvAutoEncoder(nn.Module):
         x = self.decode1(x)
         real = torch.squeeze(x)
         
-        x = torch.unsqueeze(torch.unsqueeze(imag, 0), 0)
-        x = self.activation_func(self.encode1i(x))
+        x = self.activation_func(self.encode1i(imag))
         x = self.activation_func(self.encode2i(x))
         x = self.activation_func(self.encode3i(x))
         x = self.activation_func(self.encode4i(x))

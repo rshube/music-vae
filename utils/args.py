@@ -47,12 +47,6 @@ class ArgsWrapper:
         #     action='store_true',
         #     help='print training loss'
         # )
-        # self.parser.add_argument(
-        #     '--print_every',
-        #     type=int,
-        #     default=10,
-        #     help='how often to print training output during verbose training'
-        # )
 
     def parse_args(self):
         self.args = self.parser.parse_args()
@@ -65,6 +59,7 @@ class ArgsWrapper:
         print("\n========== HYPERPARAMETERS ==========")
         for k,v in self.args.__dict__.items():
             print(f'{k}: {v}')
+        print(f'device: {self.device}')
         print("\n")
 
 

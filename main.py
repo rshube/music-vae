@@ -3,13 +3,8 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import torch
 
-from utils import ArgsWrapper, DATA_PATH
-from training import (
-    OptimizeFourierModel,
-    OptimizeModel,
-    TestAllFourierModel,
-    TestAllModel
-)
+from utils import ArgsWrapper, TRAINING_DATASET
+from functional import TrainModel, TestAllModel
 from models import (
     SimpleAutoEncoder,
     SimpleVarAutoEncoder,
@@ -66,19 +61,26 @@ def main(args):
     model, fourier = get_model(args.model)
     model = model.to(args.device)
 
+    # find a non-hard-coded way of doing this?
+    num_clips = {
+        'lofi-track-1-clip-': 720,
+        'lofi-track-2-clip-': 445,
+        'lecture-clip-': 622,
+        'jazz-clip-': 720,
+        'city-sounds-clip-': 720,
+        'white-noise-clip-': 720
+    }
+    if fourier:
+        # not sure why only using 5 clips for fourier based methods
+        num_clips = {dataset: 5 for dataset in num_clips}
+
     # Train the models
-    if not fourier:
-        losses = OptimizeModel(args, model, 'lofi-track-1-clip-', 720)
-    else:
-        losses = OptimizeFourierModel(args, model, 'lofi-track-1-clip-', 5)
+    losses = TrainModel(args, model, num_clips[TRAINING_DATASET], fourier=fourier)
+    
+    # Test the models
+    labels, results = TestAllModel(args, model, num_clips_dict=num_clips, fourier=fourier)
 
-    # test the models
-    if not fourier:
-        labels, results = TestAllModel(model)
-    else:
-        labels, results = TestAllFourierModel(model)
-
-    # save plots and model
+    # Save plots and model
     save_dir = os.path.join(os.getcwd(), 'results', args.model, datetime.now().strftime("%m_%d-%H_%M_%S"))
     os.makedirs(save_dir, exist_ok=True)
     make_training_plot(losses, args.model, save_dir)
