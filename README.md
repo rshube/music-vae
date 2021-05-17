@@ -32,7 +32,7 @@ The arguments you can add:
 | Flag      | Description | Default |
 | ---------- | - | - |
 | -h      | Show options and exit       | N/A|
-| --model   | The model type to train. Must be one of: <br />{SimpleAutoEncoder, SimpleVarAutoEncoder, AutoEncoder, <br />SimpleConvAutoEncoder, ConvAutoEncoder, ImageConvAutoEncoder}      |SimpleAutoEncoder |
+| --model   | The model type to train. Must be one of: <br />{SimpleAutoEncoder, SimpleVarAutoEncoder, ComplexAutoEncoder, <br />ComplexVarAutoEncoder, SimpleConvAutoEncoder, ComplexConvAutoEncoder, <br />ImageConvAutoEncoder}      |SimpleAutoEncoder |
 |--num_epochs | The number of epochs to complete during training | 10|
 |--lr | The learning rate | 1e-03|
 |--batch_size| The batch_size| 32|

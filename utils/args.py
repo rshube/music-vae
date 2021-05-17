@@ -16,8 +16,8 @@ class ArgsWrapper:
             choices=[
                 'SimpleAutoEncoder',
                 'SimpleVarAutoEncoder',
-                'ComplexVarAutoEncoder',
                 'ComplexAutoEncoder',
+                'ComplexVarAutoEncoder',
                 'SimpleConvAutoEncoder',
                 'ComplexConvAutoEncoder',
                 'ImageConvAutoEncoder'
