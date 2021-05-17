@@ -4,8 +4,8 @@ import numpy as np
 
 from utils import Dataset, TRAINING_DATASET
 
-def TestModel(args, model, num_clips, fourier=False):
-    trainfunc = Dataset(TRAINING_DATASET,range(1,num_clips))
+def TestModel(args, model, dataset, num_clips, fourier=False):
+    trainfunc = Dataset(dataset,range(1,num_clips))
     trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=args.batch_size, shuffle=False, num_workers=0)
     model.eval()
     lossfunc = nn.MSELoss()

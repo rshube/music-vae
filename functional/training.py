@@ -6,7 +6,7 @@ from .evaluating import TestModel
 from utils import Dataset, TRAINING_DATASET
 
 
-def TrainModel(args, model, num_clips, fourier=False):    
+def TrainModel(args, model, num_clips, fourier=False):   
     # Datasets
     trainfunc = Dataset(TRAINING_DATASET,range(1, num_clips))
     trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=args.batch_size, shuffle=True, num_workers=0)
@@ -36,7 +36,7 @@ def TrainModel(args, model, num_clips, fourier=False):
                 loss_imag.backward()
             optimizer.step()
             
-        eval_results.append(TestModel(args, model, num_clips, fourier=fourier))
+        eval_results.append(TestModel(args, model, TRAINING_DATASET, num_clips, fourier=fourier))
         print(f'[Epoch {epoch}]\tEvaluation Loss: {eval_results[-1]}')
     print('Finished Training')
     

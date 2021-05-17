@@ -9,6 +9,7 @@ from models import (
     SimpleAutoEncoder,
     SimpleVarAutoEncoder,
     ComplexAutoEncoder,
+    ComplexVarAutoEncoder,
     SimpleConvAutoEncoder,
     ComplexConvAutoEncoder,
     ImageConvAutoEncoder
@@ -22,6 +23,8 @@ def get_model(model):
         return SimpleAutoEncoder(), fourier
     elif model == 'SimpleVarAutoEncoder':
         return SimpleVarAutoEncoder(), fourier
+    elif model == 'ComplexVarAutoEncoder':
+        return ComplexVarAutoEncoder(), fourier
     elif model == 'ComplexAutoEncoder':
         return ComplexAutoEncoder(), fourier
     elif model == 'SimpleConvAutoEncoder':
@@ -69,6 +72,14 @@ def main(args):
         'jazz-clip-': 720,
         'city-sounds-clip-': 720,
         'white-noise-clip-': 720
+    }
+    num_clips = {
+        'lofi-track-1-clip-': 719,
+        'lofi-track-2-clip-': 444,
+        'lecture-clip-': 621,
+        'jazz-clip-': 719,
+        'city-sounds-clip-': 719,
+        'white-noise-clip-': 719
     }
     if fourier:
         # not sure why only using 5 clips for fourier based methods
