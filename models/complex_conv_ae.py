@@ -2,18 +2,14 @@ import torch
 from torch import nn
 
 
-class ComplexConvAutoEncoder(nn.Module):
+class ComplexConvEncoder(nn.Module):
     def __init__(self):
-        super(ComplexConvAutoEncoder, self).__init__()
+        super(ComplexConvEncoder, self).__init__()
         self.encode1 = nn.Conv1d(1, 4, 501, padding=250)
         self.encode2 = nn.Conv1d(4, 8, 251, padding=125)
         self.encode3 = nn.Conv1d(8, 16, 125, padding=62)
-        self.decode1 = nn.Conv1d(16, 8, 125, padding=62)
-        self.decode2 = nn.Conv1d(8, 4, 251, padding=125)
-        self.decode3 = nn.Conv1d(4, 1, 501, padding=250)
         
         self.pool = nn.MaxPool1d(10, stride=10, return_indices=True)
-        self.unpool = nn.MaxUnpool1d(10, stride=10)
         self.activation_func = nn.ReLU()
 
     def forward(self, x):
@@ -25,9 +21,35 @@ class ComplexConvAutoEncoder(nn.Module):
         y2 = x.size()
         x, p2 = self.pool(x)
         x = self.activation_func(self.encode3(x))
+        return x, (y1, p1, y2, p2)
+        
+        
+class ComplexConvDecoder(nn.Module):
+    def __init__(self):
+        super(ComplexConvDecoder, self).__init__()
+        self.decode1 = nn.Conv1d(16, 8, 125, padding=62)
+        self.decode2 = nn.Conv1d(8, 4, 251, padding=125)
+        self.decode3 = nn.Conv1d(4, 1, 501, padding=250)
+        
+        self.unpool = nn.MaxUnpool1d(10, stride=10)
+        self.activation_func = nn.ReLU()
+
+    def forward(self, x, y1, p1, y2, p2):
         x = self.activation_func(self.decode1(x))
         x = self.unpool(x, p2, output_size=y2)
         x = self.activation_func(self.decode2(x))
         x = self.unpool(x, p1, output_size=y1)
         x = self.decode3(x)
         return torch.squeeze(x)
+        
+        
+class ComplexConvAutoEncoder(nn.Module):
+    def __init__(self):
+        super(ComplexConvAutoEncoder, self).__init__()
+        self.encoder = ComplexConvEncoder()
+        self.decoder = ComplexConvDecoder()
+
+    def forward(self, x):
+        x, (y1, p1, y2, p2) = self.encoder(x)
+        x = self.decoder(x, y1, p1, y2, p2)
+        return x
