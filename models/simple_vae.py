@@ -24,19 +24,13 @@ class SimpleVarEncoder(nn.Module):
 class SimpleVarDecoder(nn.Module):
     def __init__(self):
         super(SimpleVarDecoder, self).__init__()
-        self.decode_mu = nn.Linear(50, 220500)
-        self.decode_logstd = nn.Linear(50, 220500)
+        self.decode1= nn.Linear(50, 220500)
         
-        self.activation_func = nn.ReLU()
-
 
     def forward(self, stimulus):
-        mu = self.decode_mu(stimulus)
-        logstd = self.decode_logstd(stimulus)
-        logstd = torch.clamp(logstd, -20, 2)
-        dist = torch.distributions.Normal(mu, torch.exp(logstd))
+        x = self.decode1(stimulus)
 
-        return dist
+        return x
 
 
 class SimpleVarAutoEncoder(nn.Module):
@@ -50,7 +44,6 @@ class SimpleVarAutoEncoder(nn.Module):
         dist = self.encoder(stimulus)
         # rsample performs reparam trick to keep deterministic and enable backprop
         x = torch.tanh(dist.rsample())
-        out_dist = self.decoder(x)
-        x = torch.tanh(out_dist.rsample())
+        x = self.decoder(x)
         return x
 

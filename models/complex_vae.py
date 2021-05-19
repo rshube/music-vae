@@ -30,8 +30,7 @@ class ComplexVarDecoder(nn.Module):
         super(ComplexVarDecoder, self).__init__()
         self.decode1 = nn.Linear(50, 100)
         self.decode2 = nn.Linear(100, 250)
-        self.decode_mu = nn.Linear(250, 220500)
-        self.decode_logstd = nn.Linear(250, 220500)
+        self.decode3 = nn.Linear(250, 220500)
         
         self.activation_func = nn.ReLU()
 
@@ -39,13 +38,7 @@ class ComplexVarDecoder(nn.Module):
     def forward(self, stimulus):
         x = self.activation_func(self.decode1(stimulus))
         x = self.activation_func(self.decode2(x))
-        mu = self.decode_mu(x)
-        logstd = self.decode_logstd(x)
-        logstd = torch.clamp(logstd, -20, 2)
-        dist = torch.distributions.Normal(mu, torch.exp(logstd))
-
-        # rsample performs reparam trick to keep deterministic and enable backprop
-        x = torch.tanh(dist.rsample())
+        x = self.decode3(x)
         
         return x
 
@@ -61,6 +54,5 @@ class ComplexVarAutoEncoder(nn.Module):
         dist = self.encoder(stimulus)
         # rsample performs reparam trick to keep deterministic and enable backprop
         x = torch.tanh(dist.rsample())
-        out_dist = self.decoder(x)
-        x = torch.tanh(out_dist.rsample())
+        x = self.decoder(x)
         return x
