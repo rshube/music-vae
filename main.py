@@ -66,14 +66,6 @@ def main(args):
 
     # find a non-hard-coded way of doing this?
     num_clips = {
-        'lofi-track-1-clip-': 720,
-        'lofi-track-2-clip-': 445,
-        'lecture-clip-': 622,
-        'jazz-clip-': 720,
-        'city-sounds-clip-': 720,
-        'white-noise-clip-': 720
-    }
-    num_clips = {
         'lofi-track-1-clip-': 719,
         'lofi-track-2-clip-': 444,
         'lecture-clip-': 621,
@@ -81,9 +73,6 @@ def main(args):
         'city-sounds-clip-': 719,
         'white-noise-clip-': 719
     }
-    if fourier:
-        # not sure why only using 5 clips for fourier based methods
-        num_clips = {dataset: 5 for dataset in num_clips}
 
     # Train the models
     losses = TrainModel(args, model, num_clips[TRAINING_DATASET], fourier=fourier)
