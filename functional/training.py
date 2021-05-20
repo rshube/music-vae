@@ -1,10 +1,19 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 import numpy as np
 
 from .evaluating import TestModel
 from utils import Dataset, TRAINING_DATASET
 
+
+def vae_loss(model_out, x):
+    recon_x, mu, logstd = model_out
+    BCE = F.mse_loss(recon_x, x)
+
+    KLD = -0.5 * torch.sum(1 + 2*logstd - mu.pow(2) - (2*logstd).exp())
+
+    return BCE + KLD
 
 def TrainModel(args, model, num_clips, fourier=False):   
     # Datasets
@@ -13,7 +22,10 @@ def TrainModel(args, model, num_clips, fourier=False):
     
     # Optimize and Loss
     optimizer = torch.optim.Adam(model.parameters(), args.lr)
-    lossfunc = nn.MSELoss()
+    if not args.variational:
+        lossfunc = nn.MSELoss()
+    else:
+        lossfunc = vae_loss
     model.train()
     
     # Train

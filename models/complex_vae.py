@@ -20,9 +20,8 @@ class ComplexVarEncoder(nn.Module):
         mu = self.encode_mu(x)
         logstd = self.encode_logstd(x)
         logstd = torch.clamp(logstd, -20, 2)
-        dist = torch.distributions.Normal(mu, torch.exp(logstd))
 
-        return dist
+        return mu, logstd
 
 
 class ComplexVarDecoder(nn.Module):
@@ -51,8 +50,9 @@ class ComplexVarAutoEncoder(nn.Module):
         
 
     def forward(self, stimulus):
-        dist = self.encoder(stimulus)
+        mu, logstd = self.encoder(stimulus)
+        dist = torch.distributions.Normal(mu, torch.exp(logstd))
         # rsample performs reparam trick to keep deterministic and enable backprop
         x = torch.tanh(dist.rsample())
         x = self.decoder(x)
-        return x
+        return x, mu, logstd

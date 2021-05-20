@@ -16,14 +16,17 @@ from models import (
 )
 
 
-def get_model(model):
+def get_model(args):
     model = args.model
+    args.variational = False
     fourier = False
     if model == 'SimpleAutoEncoder':
         return SimpleAutoEncoder(), fourier
     elif model == 'SimpleVarAutoEncoder':
+        args.variational = True
         return SimpleVarAutoEncoder(), fourier
     elif model == 'ComplexVarAutoEncoder':
+        args.variational = True
         return ComplexVarAutoEncoder(), fourier
     elif model == 'ComplexAutoEncoder':
         return ComplexAutoEncoder(), fourier
@@ -61,7 +64,7 @@ def make_evaluation_plot(labels, results, model_name, save_dir):
     plt.show()
 
 def main(args):
-    model, fourier = get_model(args.model)
+    model, fourier = get_model(args)
     model = model.to(args.device)
 
     # find a non-hard-coded way of doing this?
