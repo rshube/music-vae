@@ -4,11 +4,22 @@ import numpy as np
 
 from utils import Dataset, TRAINING_DATASET
 
+def vae_loss(model_out, x):
+    recon_x, mu, logstd = model_out
+    BCE = F.mse_loss(recon_x, x)
+
+    KLD = -0.5 * torch.sum(1 + 2*logstd - mu.pow(2) - (2*logstd).exp())
+
+    return BCE + KLD
+
 def TestModel(args, model, dataset, num_clips, fourier=False):
     trainfunc = Dataset(dataset,range(1,num_clips))
     trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=args.batch_size, shuffle=False, num_workers=0)
     model.eval()
-    lossfunc = nn.MSELoss()
+    if not args.variational:
+        lossfunc = nn.MSELoss()
+    else:
+        lossfunc = vae_loss
     
     losses = []
     for i, data in enumerate(trainloader):
